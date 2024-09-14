@@ -15,7 +15,6 @@ const SignUp = () => {
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
   const navigate = useNavigate();
-
   const handleSignUp = async (e) => {
     e.preventDefault();
     setError("");

@@ -1,11 +1,24 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { Grid, Link, Button, Paper, TextField, Typography, CircularProgress, Snackbar, Alert } from "@mui/material";
+import {
+  Grid,
+  Link,
+  Button,
+  Paper,
+  TextField,
+  Typography,
+  CircularProgress,
+  Snackbar,
+  Alert,
+  FormControlLabel,
+  Checkbox,
+} from "@mui/material";
 
 const Login = ({ onLogin }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false); // State for admin checkbox
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
@@ -21,17 +34,32 @@ const Login = ({ onLogin }) => {
     setLoading(true);
 
     try {
-      const result = await axios.post("http://localhost:5050/login", { email, password }, { withCredentials: true });
-      if (result.data.message === "Success") {
-        setSnackbarMessage("Login successful!");
-        setSnackbarSeverity("success");
-        setOpenSnackbar(true);
-        onLogin();
-        setTimeout(() => navigate("/"), 2000);
+      if (isAdmin) {
+        // Admin login logic
+        if (email === "admin" && password === "admin") {
+          setSnackbarMessage("Admin login successful!");
+          setSnackbarSeverity("success");
+          setOpenSnackbar(true);
+          setTimeout(() => navigate("/admin"), 2000); // Redirect to admin page
+        } else {
+          setSnackbarMessage("Invalid admin credentials.");
+          setSnackbarSeverity("error");
+          setOpenSnackbar(true);
+        }
       } else {
-        setSnackbarMessage("Login failed. Please check your credentials.");
-        setSnackbarSeverity("error");
-        setOpenSnackbar(true);
+        // Regular user login logic
+        const result = await axios.post("http://localhost:5050/login", { email, password }, { withCredentials: true });
+        if (result.data.message === "Success") {
+          setSnackbarMessage("Login successful!");
+          setSnackbarSeverity("success");
+          setOpenSnackbar(true);
+          onLogin();
+          setTimeout(() => navigate("/"), 2000);
+        } else {
+          setSnackbarMessage("Login failed. Please check your credentials.");
+          setSnackbarSeverity("error");
+          setOpenSnackbar(true);
+        }
       }
     } catch (err) {
       console.error(err);
@@ -50,14 +78,16 @@ const Login = ({ onLogin }) => {
   return (
     <Grid container style={containerStyle}>
       <Paper style={paperStyle}>
-        <Typography component="h1" variant="h5" style={headingStyle}>Login</Typography>
+        <Typography component="h1" variant="h5" style={headingStyle}>
+          Login
+        </Typography>
         <form onSubmit={handleLogin} style={formStyle}>
           <TextField
             fullWidth
-            label="Email"
+            label={isAdmin ? "Username" : "Email"} // Changes label based on login type
             variant="outlined"
-            type="email"
-            placeholder="Enter Email"
+            type={isAdmin ? "text" : "email"} // Changes input type for admin login
+            placeholder={isAdmin ? "Enter Admin Username" : "Enter Email"}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -72,10 +102,30 @@ const Login = ({ onLogin }) => {
             onChange={(e) => setPassword(e.target.value)}
             required
           />
-          {error && <Typography color="error" variant="body2" style={{ marginTop: "1rem" }}>{error}</Typography>}
-          {success && <Typography color="success" variant="body2" style={{ marginTop: "1rem", color: 'green' }}>{success}</Typography>}
+          <FormControlLabel
+            control={<Checkbox checked={isAdmin} onChange={() => setIsAdmin(!isAdmin)} />}
+            label="Login as Admin"
+            style={{ alignSelf: "flex-start", marginTop: "1rem" }} // Adjusted style for positioning
+          />
+          {error && (
+            <Typography color="error" variant="body2" style={{ marginTop: "1rem" }}>
+              {error}
+            </Typography>
+          )}
+          {success && (
+            <Typography color="success" variant="body2" style={{ marginTop: "1rem", color: "green" }}>
+              {success}
+            </Typography>
+          )}
           <Button style={btnStyle} variant="contained" type="submit" disabled={loading}>
-            {loading ? <CircularProgress size={24} style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)" }} /> : 'Login'}
+            {loading ? (
+              <CircularProgress
+                size={24}
+                style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)" }}
+              />
+            ) : (
+              "Login"
+            )}
           </Button>
         </form>
         <Typography variant="body2" align="center" style={{ marginTop: "1rem" }}>
@@ -87,7 +137,7 @@ const Login = ({ onLogin }) => {
         autoHideDuration={6000}
         onClose={handleCloseSnackbar}
         ContentProps={{
-          sx: snackbarStyle
+          sx: snackbarStyle,
         }}
       >
         <Alert onClose={handleCloseSnackbar} severity={snackbarSeverity} sx={snackbarStyle}>
@@ -112,7 +162,7 @@ const headingStyle = {
   fontSize: "2.5rem",
   fontWeight: "600",
   marginBottom: "1.5rem",
-  textAlign: "center"
+  textAlign: "center",
 };
 
 const formStyle = {
@@ -129,7 +179,7 @@ const btnStyle = {
   color: "#ffffff",
   borderRadius: "8px",
   textTransform: "none",
-  alignSelf: "center"
+  alignSelf: "center",
 };
 
 const containerStyle = {
