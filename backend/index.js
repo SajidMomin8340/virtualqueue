@@ -48,7 +48,7 @@ app.use(session({
 // Database connection
 mongoose.connect(mongodbURL, { useNewUrlParser: true, useUnifiedTopology: true })
     .then(() => console.log('App connected to database'))
-    .catch(err => console.error('Database connection error:', err));
+    .catch(err => console.error('database connection error:', err));
 
 // Start server
 app.listen(PORT, () => {
